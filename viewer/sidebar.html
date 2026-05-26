@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Google Fonts からモダンなフォントをインポートする -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --secondary-color: #0ea5e9;
+        --secondary-hover: #0284c7;
+        --success-color: #10b981;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+        --text-color: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .title {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--primary-color);
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .card-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0 0 12px 0;
+        color: var(--text-color);
+      }
+
+      .btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+      }
+
+      .btn:last-child {
+        margin-bottom: 0;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: #ffffff;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-hover);
+      }
+
+      .btn-secondary {
+        background-color: var(--secondary-color);
+        color: #ffffff;
+      }
+
+      .btn-secondary:hover {
+        background-color: var(--secondary-hover);
+      }
+
+      .btn:disabled {
+        background-color: #cbd5e1;
+        cursor: not-allowed;
+      }
+
+      .preview-area {
+        position: relative;
+        margin-top: 16px;
+      }
+
+      .preview-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 150px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--text-color);
+        background-color: #f1f5f9;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+
+      /* トースト通知 */
+      .toast {
+        position: fixed;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        background-color: #1e293b;
+        color: #ffffff;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 1000;
+      }
+
+      .toast.show {
+        opacity: 0.95;
+      }
+
+      /* ローディングスピナー */
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #ffffff;
+        animation: spin 0.8s ease-in-out infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      .option-container {
+        margin-bottom: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        text-align: left;
+        background-color: #f1f5f9;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+      }
+      .option-label {
+        font-size: 12px;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1 class="title">名簿ビューア連携</h1>
+      <p class="subtitle">事務作業を効率化するための操作パネル</p>
+    </div>
+
+    <!-- 1. 同期セクション -->
+    <div class="card">
+      <h2 class="card-title">【緊急用】マスター名簿の同期</h2>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: -6px; margin-bottom: 10px;">通常は毎日深夜に自動同期されます.</p>
+      <button id="syncBtn" class="btn btn-secondary" onclick="handleSync()">
+        手動同期を実行
+      </button>
+    </div>
+
+    <!-- 2. コピペ名簿セクション -->
+    <div class="card">
+      <h2 class="card-title">級別名簿のコピー</h2>
+      <button id="lineUpdateBtn" class="btn btn-primary" onclick="handleCopyLineUpdateList()" style="margin-bottom: 8px;">
+        LINE更新用名簿をコピー
+      </button>
+      <button id="regularBtn" class="btn btn-secondary" onclick="handleCopyClassListRegular()">
+        正准名簿をコピー
+      </button>
+      <button id="mateBtn" class="btn btn-secondary" onclick="handleCopyClassListMate()">
+        メイト会員名簿をコピー
+      </button>
+    </div>
+
+    <!-- 3. ソート名簿セクション -->
+    <div class="card">
+      <h2 class="card-title">ソート名簿のコピー</h2>
+      <div class="option-container">
+        <label class="option-label">
+          <input type="checkbox" id="includeRegular" checked> 正会員・准会員を含める
+        </label>
+        <label class="option-label">
+          <input type="checkbox" id="includeMate" checked> メイト会員を含める
+        </label>
+        <label class="option-label">
+          <input type="checkbox" id="showClass"> 級を表示する
+        </label>
+      </div>
+      <button id="sortBtn" class="btn btn-secondary" onclick="handleCopySortedList()">
+        現在のソート順でコピー
+      </button>
+    </div>
+
+    <!-- プレビューセクション -->
+    <div class="preview-area">
+      <div class="preview-label">コピー内容のプレビュー</div>
+      <textarea id="previewText" readonly placeholder="ボタンを押すとここにコピーされた名簿が表示されます."></textarea>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast" class="toast">コピーしました.</div>
+
+    <script>
+      /**
+       * トースト通知を表示する.
+       * @param {string} message - 表示するメッセージ
+       */
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2000);
+      }
+
+      /**
+       * ボタンのローディング状態を制御する.
+       * @param {string} buttonId - 対象ボタンのID
+       * @param {boolean} isLoading - ローディング中かどうか
+       * @param {string} originalText - 元のボタンテキスト
+       */
+      function setButtonLoading(buttonId, isLoading, originalText) {
+        const button = document.getElementById(buttonId);
+        if (isLoading) {
+          button.disabled = true;
+          button.innerHTML = '<span class="spinner"></span>処理中...';
+        } else {
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      }
+
+      /**
+       * テキストをクリップボードにコピーし, プレビューを更新する.
+       * @param {string} text - コピーするテキスト
+       */
+      function copyAndPreview(text) {
+        const previewElement = document.getElementById("previewText");
+        previewElement.value = text;
+
+        if (!text) {
+          showToast("コピー対象のデータがありません.");
+          return;
+        }
+
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            showToast("クリップボードにコピーしました.");
+          })
+          .catch((error) => {
+            console.error("コピー失敗: ", error);
+            showToast("コピーに失敗しました. プレビューから手動でコピーしてください.");
+          });
+      }
+
+      /**
+       * マスター同期処理の呼び出し.
+       */
+      function handleSync() {
+        setButtonLoading("syncBtn", true, "マスターからデータを同期");
+        google.script.run
+          .withSuccessHandler((result) => {
+            setButtonLoading("syncBtn", false, "マスターからデータを同期");
+            if (result) {
+              showToast("マスター名簿の同期が完了しました.");
+            } else {
+              showToast("同期に失敗しました.");
+            }
+          })
+          .withFailureHandler((error) => {
+            setButtonLoading("syncBtn", false, "マスターからデータを同期");
+            console.error("サーバーエラー: ", error);
+            showToast("サーバー通信でエラーが発生しました.");
+          })
+          .syncFromMaster();
+      }
+
+      /**
+       * LINE更新用名簿の生成・コピー.
+       */
+      function handleCopyLineUpdateList() {
+        setButtonLoading("lineUpdateBtn", true, "LINE更新用名簿をコピー");
+        google.script.run
+          .withSuccessHandler((text) => {
+            setButtonLoading("lineUpdateBtn", false, "LINE更新用名簿をコピー");
+            copyAndPreview(text);
+          })
+          .withFailureHandler((error) => {
+            setButtonLoading("lineUpdateBtn", false, "LINE更新用名簿をコピー");
+            console.error("サーバーエラー: ", error);
+            showToast("テキスト生成に失敗しました.");
+          })
+          .generateLineUpdateListText();
+      }
+
+      /**
+       * 正准会員名簿の生成・コピー.
+       */
+      function handleCopyClassListRegular() {
+        setButtonLoading("regularBtn", true, "正准名簿をコピー");
+        google.script.run
+          .withSuccessHandler((text) => {
+            setButtonLoading("regularBtn", false, "正准名簿をコピー");
+            copyAndPreview(text);
+          })
+          .withFailureHandler((error) => {
+            setButtonLoading("regularBtn", false, "正准名簿をコピー");
+            console.error("サーバーエラー: ", error);
+            showToast("テキスト生成に失敗しました.");
+          })
+          .generateRegularAssociateClassListText();
+      }
+
+      /**
+       * メイト会員名簿の生成・コピー.
+       */
+      function handleCopyClassListMate() {
+        setButtonLoading("mateBtn", true, "メイト会員名簿をコピー");
+        google.script.run
+          .withSuccessHandler((text) => {
+            setButtonLoading("mateBtn", false, "メイト会員名簿をコピー");
+            copyAndPreview(text);
+          })
+          .withFailureHandler((error) => {
+            setButtonLoading("mateBtn", false, "メイト会員名簿をコピー");
+            console.error("サーバーエラー: ", error);
+            showToast("テキスト生成に失敗しました.");
+          })
+          .generateMateClassListText();
+      }
+
+      /**
+       * 現在のソート順での名簿の生成・コピー.
+       */
+      function handleCopySortedList() {
+        const includeRegular = document.getElementById("includeRegular").checked;
+        const includeMate = document.getElementById("includeMate").checked;
+        const showClass = document.getElementById("showClass").checked;
+
+        setButtonLoading("sortBtn", true, "現在のソート順でコピー");
+        google.script.run
+          .withSuccessHandler((text) => {
+            setButtonLoading("sortBtn", false, "現在のソート順でコピー");
+            copyAndPreview(text);
+          })
+          .withFailureHandler((error) => {
+            setButtonLoading("sortBtn", false, "現在のソート順でコピー");
+            console.error("サーバーエラー: ", error);
+            showToast("テキスト生成に失敗しました.");
+          })
+          .generateSortedListText(includeRegular, includeMate, showClass);
+      }
+
+
+    </script>
+  </body>
+</html>

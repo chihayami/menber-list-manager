@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        font-size: 14px;
+        color: #333333;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        box-sizing: border-box;
+      }
+      .container {
+        text-align: center;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 320px;
+      }
+      .loader {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .text-area {
+        width: 100%;
+        height: 80px;
+        margin-top: 10px;
+        padding: 8px;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: monospace;
+        font-size: 12px;
+        resize: none;
+      }
+      .button {
+        margin-top: 15px;
+        padding: 8px 16px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .button:hover {
+        background-color: #2980b9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="statusIcon" class="loader"></div>
+      <div id="statusMessage">クリップボードにコピーしています...</div>
+      <textarea id="copyText" class="text-area" readonly><?= text ?></textarea>
+      <button id="closeBtn" class="button" onclick="closeDialog()" style="display:none;">閉じる</button>
+    </div>
+
+    <script>
+      /**
+       * ダイアログを閉じる.
+       */
+      function closeDialog() {
+        google.script.host.close();
+      }
+
+      /**
+       * テキストをクリップボードにコピーする.
+       */
+      function copyToClipboard() {
+        const copyTextElement = document.getElementById("copyText");
+        const statusMessageElement = document.getElementById("statusMessage");
+        const statusIconElement = document.getElementById("statusIcon");
+        const closeBtnElement = document.getElementById("closeBtn");
+
+        // クリップボードAPIを使用してコピーを試みる.
+        navigator.clipboard.writeText(copyTextElement.value)
+          .then(() => {
+            statusMessageElement.innerText = "コピーが完了しました.";
+            statusIconElement.style.display = "none";
+            // 成功した場合は即座にダイアログを閉じる.
+            setTimeout(() => {
+              closeDialog();
+            }, 300);
+          })
+          .catch((error) => {
+            console.error("コピー失敗: ", error);
+            statusMessageElement.innerText = "自動コピーに失敗しました. 以下のテキストを手動でコピーしてください.";
+            statusIconElement.style.display = "none";
+            closeBtnElement.style.display = "inline-block";
+            // 手動コピーのためにフォーカスを当てる.
+            copyTextElement.focus();
+            copyTextElement.select();
+          });
+      }
+
+      // 読み込み完了時に実行する.
+      window.addEventListener("DOMContentLoaded", () => {
+        copyToClipboard();
+      });
+    </script>
+  </body>
+</html>

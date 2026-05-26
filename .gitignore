@@ -1,0 +1,13 @@
+# Dependencies
+**/node_modules/
+
+# GAS Clasp Settings (contains script ID and credentials)
+**/.clasp.json
+
+# Logs
+**/*.log
+**/npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db

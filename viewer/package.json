@@ -1,0 +1,12 @@
+{
+  "name": "member-list-viewer",
+  "version": "1.0.0",
+  "description": "Google Apps Script based viewer for member list management.",
+  "scripts": {
+    "test": "node -e \"const fs = require('fs'); eval(fs.readFileSync('config.js', 'utf8') + fs.readFileSync('generator.js', 'utf8') + fs.readFileSync('test.js', 'utf8')); runTests();\"",
+    "push": "npx clasp push"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.8"
+  }
+}
