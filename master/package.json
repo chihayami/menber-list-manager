@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "LINE Webhook based member list manager system utilizing Google Apps Script.",
   "scripts": {
-    "test": "node -e \"const fs = require('fs'); eval(fs.readFileSync('config.js', 'utf8') + fs.readFileSync('log.js', 'utf8') + fs.readFileSync('process.js', 'utf8') + fs.readFileSync('webhook.js', 'utf8') + fs.readFileSync('test.js', 'utf8')); runTests();\"",
+    "test": "node -e \"const fs = require('fs'); eval(fs.readFileSync('src/config.js', 'utf8') + fs.readFileSync('src/log.js', 'utf8') + fs.readFileSync('src/process.js', 'utf8') + fs.readFileSync('src/webhook.js', 'utf8') + fs.readFileSync('test.js', 'utf8')); runTests();\"",
     "push": "npx clasp push -A C:\\Users\\AI\\.clasprc-jimu.json"
   },
   "devDependencies": {
