@@ -1,6 +1,6 @@
-const SPREADSHEET_ID = '1WKk78wsoCe4MNS8btdwAvvq0QGAxR-F3xZoc4ZjfBbM';
-// LINE Developersで取得したチャネルアクセストークンを定義する.
-const LINE_ACCESS_TOKEN = "YOUR_LINE_ACCESS_TOKEN";
+const PROPERTIES = PropertiesService.getScriptProperties();
+const SPREADSHEET_ID = PROPERTIES.getProperty("MEMBER_LIST_ID");
+const LINE_ACCESS_TOKEN = PROPERTIES.getProperty("LINE_TOKEN");
 
 // シート名の定数.
 const SPREADSHEET_NAME = {

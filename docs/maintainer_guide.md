@@ -30,7 +30,7 @@
 システムの管理には以下のツールを使用する.
 - Google Apps Script (GAS)
 - LINE Developers コンソール
-- Node.js (claspを利用したローカル開発を行う場合)
+- Node.js (任意, claspを利用したローカル開発を行う場合)
 
 ---
 

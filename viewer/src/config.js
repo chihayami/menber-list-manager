@@ -1,4 +1,5 @@
-const SPREADSHEET_ID = "1WKk78wsoCe4MNS8btdwAvvq0QGAxR-F3xZoc4ZjfBbM";
+const PROPERTIES = PropertiesService.getScriptProperties()
+const SPREADSHEET_ID = PROPERTIES.getProperty("SPREADSHEET_ID");
 
 // viewer側スプレッドシートのシート名.
 const VIEWER_SHEET_NAME = {
