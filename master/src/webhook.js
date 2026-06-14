@@ -34,7 +34,7 @@ function doPost(e) {
       logWarn("doPost警告: イベントデータ (events) が空です.");
       return ContentService.createTextOutput("OK");
     }
-    
+
     console.log("受信イベントの概要: type=" + event.type + ", source=" + JSON.stringify(event.source));
 
     if (event.type !== "message" || event.message?.type !== "text") {
@@ -78,17 +78,17 @@ function dispatchLineCommand(text, replyToken) {
   console.log("dispatchLineCommandを開始します. テキスト: " + text + ", replyToken: " + replyToken);
   const { type, params } = parseText(text);
   console.log("コマンド解析結果: type=" + type + ", params=" + JSON.stringify(params));
-  
+
   let lastName = params["姓"];
   let firstName = params["名"];
-  
+
   // 既存メンバーを対象とするコマンドの場合、フルネーム解決を試みる.
   if (type === "昇級" || type === "区分変更" || type === "休退会") {
     let rawFullName = params["フルネーム"] || params["姓名"] || params["氏名"] || params["名前"];
     if (rawFullName == null && lastName != null && firstName != null) {
       rawFullName = lastName + firstName;
     }
-    
+
     if (rawFullName != null) {
       const fullNameWithoutSpace = rawFullName.replace(/\s/g, "");
       const resolved = findMemberByName(fullNameWithoutSpace);
@@ -105,7 +105,7 @@ function dispatchLineCommand(text, replyToken) {
 
   const dateStr = params["日付"];
   const eventDate = parseDateParameter(dateStr);
-  
+
   let replyMessage = "";
 
   // 共通の入力チェックを行う. 説明コマンド以外では姓名は必須とする.
@@ -166,7 +166,7 @@ function dispatchLineCommand(text, replyToken) {
     // LINE入力の表記ゆれを吸収する.
     const lastNameFuri = params["姓ふりがな"] || params["ふりがな姓"] || params["せい"] || "";
     const firstNameFuri = params["名ふりがな"] || params["ふりがな名"] || params["めい"] || "";
-    const schoolYear = params["学年"] || "";
+    const schoolYear = normalizeSchoolYear(params["学年"] || "");
 
     // 級の検証を行う.
     const rawClass = params["級"] || params["現在の級"];
@@ -304,7 +304,7 @@ function validateMemberStatus(rawStr) {
  */
 function sendLineReply(replyToken, text) {
   console.log("sendLineReplyが呼び出されました. replyToken: " + replyToken + ", 送信テキスト: " + text);
-  
+
   if (!replyToken) {
     logError("sendLineReplyエラー: replyTokenが空です. 送信を中断します.");
     return;
@@ -361,9 +361,9 @@ function parseDateParameter(rawStr, referenceDate = new Date()) {
   if (rawStr == null || rawStr === "") {
     return referenceDate;
   }
-  
+
   const cleaned = rawStr.trim();
-  
+
   // 1. yyyy/m/d または yyyy-m-d の形式をチェックする.
   const yyyyMmDdRegex = /^(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})$/;
   const yyyyMatch = cleaned.match(yyyyMmDdRegex);
@@ -376,28 +376,28 @@ function parseDateParameter(rawStr, referenceDate = new Date()) {
       return parsedDate;
     }
   }
-  
+
   // 2. m/d または m-d の形式をチェックする（西暦なし）.
   const mmDdRegex = /^(\d{1,2})[/\-](\d{1,2})$/;
   const mmDdMatch = cleaned.match(mmDdRegex);
   if (mmDdMatch != null) {
     const month = parseInt(mmDdMatch[1], 10) - 1;
     const day = parseInt(mmDdMatch[2], 10);
-    
+
     const referenceYear = referenceDate.getFullYear();
-    
+
     // 前年, 今年, 来年の同月日候補を生成する.
     const candidatePrev = new Date(referenceYear - 1, month, day);
     const candidateCurr = new Date(referenceYear, month, day);
     const candidateNext = new Date(referenceYear + 1, month, day);
-    
+
     const diffPrev = Math.abs(candidatePrev.getTime() - referenceDate.getTime());
     const diffCurr = Math.abs(candidateCurr.getTime() - referenceDate.getTime());
     const diffNext = Math.abs(candidateNext.getTime() - referenceDate.getTime());
-    
+
     let minDiff = diffCurr;
     let bestCandidate = candidateCurr;
-    
+
     if (!isNaN(diffPrev) && diffPrev < minDiff) {
       minDiff = diffPrev;
       bestCandidate = candidatePrev;
@@ -406,12 +406,64 @@ function parseDateParameter(rawStr, referenceDate = new Date()) {
       minDiff = diffNext;
       bestCandidate = candidateNext;
     }
-    
+
     if (!isNaN(bestCandidate.getTime())) {
       return bestCandidate;
     }
   }
-  
+
   console.warn("日付のパースに失敗しました. 入力値: " + rawStr + ", 基準日を使用します.");
   return referenceDate;
+}
+
+/**
+ * 学年の表記ゆれ（半角・全角数字, 漢数字）を半角数字に正規化する.
+ * @param {string} rawStr - 入力された学年文字列
+ * @return {string} - 正規化された学年文字列
+ */
+function normalizeSchoolYear(rawStr) {
+  if (rawStr == null) {
+    return "";
+  }
+
+  // 1. 前後の空白および途中の空白を除去する.
+  let normalized = rawStr.replace(/\s/g, "");
+
+  // 2. 全角数字を半角数字に変換する.
+  normalized = normalized.replace(/[０-９]/g, (ch) => {
+    return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
+  });
+
+  // 3. 漢数字を半角数字に変換する.
+  const KANJI_NUM_MAP = {
+    "一": "1",
+    "二": "2",
+    "三": "3",
+    "四": "4",
+    "五": "5",
+    "六": "6",
+    "七": "7",
+    "八": "8",
+    "九": "9",
+    "十": "10"
+  };
+
+  // パターン1: 「小」「中」「高」「大」などの学年プレフィックスの後に漢数字が続く場合.
+  normalized = normalized.replace(
+    /(小|中|高|大|小学|中学|高校|大学)([一二三四五六七八九十])/g,
+    (match, p1, p2) => p1 + KANJI_NUM_MAP[p2]
+  );
+
+  // パターン2: 文字列全体が漢数字のみの場合.
+  if (/^[一二三四五六七八九十]$/.test(normalized)) {
+    normalized = KANJI_NUM_MAP[normalized];
+  }
+
+  // パターン3: 漢数字の後に「年」「年生」が続く場合.
+  normalized = normalized.replace(
+    /([一二三四五六七八九十])(年|年生)/g,
+    (match, p1, p2) => KANJI_NUM_MAP[p1] + p2
+  );
+
+  return normalized;
 }

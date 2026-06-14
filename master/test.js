@@ -202,6 +202,18 @@ function runTests() {
     const date7 = parseDateParameter("invalid-date", refDate);
     assertEquals(date7.getTime(), refDate.getTime(), "無効指定時のフォールバックが正しくありません");
 
+    // 4.5. normalizeSchoolYearのテスト.
+    console.log("テスト: normalizeSchoolYear の検証");
+    assertEquals(normalizeSchoolYear("小1"), "小1", "半角のままであるべき");
+    assertEquals(normalizeSchoolYear("小１"), "小1", "全角数字が半角数字に変換されるべき");
+    assertEquals(normalizeSchoolYear("小一"), "小1", "漢数字が一桁の半角数字に変換されるべき");
+    assertEquals(normalizeSchoolYear(" 小 一 "), "小1", "空白が除去されるべき");
+    assertEquals(normalizeSchoolYear("中三"), "中3", "漢数字の三が3に変換されるべき");
+    assertEquals(normalizeSchoolYear("高10"), "高10", "10は10のままであるべき");
+    assertEquals(normalizeSchoolYear("大十"), "大10", "漢数字の十が10に変換されるべき");
+    assertEquals(normalizeSchoolYear("一般"), "一般", "数字を含まない文字列はそのまま残るべき");
+    assertEquals(normalizeSchoolYear(null), "", "nullの場合は空文字が返るべき");
+
     // 5. 過去の昇級日のロールバック防止テスト.
     console.log("テスト: 過去日付での昇級処理（名簿更新スキップ）の検証");
     
